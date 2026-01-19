@@ -1,0 +1,136 @@
+version: "3.7"
+
+services:
+  # --- HADOOP СЕГМЕНТ ---
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    restart: always
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+      - ./:/input_data
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - analytics-net
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    restart: always
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    environment:
+      - SERVICE_PRECONDITION=namenode:9870
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+    networks:
+      - analytics-net
+
+  # --- HIVE СЕГМЕНТ ---
+  hive-metastore-db:
+    image: postgres:13
+    container_name: metastore_db
+    environment:
+      POSTGRES_DB: metastore_db
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive_password
+    volumes:
+      - metastore_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hive -d metastore_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - analytics-net
+
+  hive-server:
+    image: bde2020/hive:2.3.2
+    container_name: hive-server
+    restart: always
+    depends_on:
+      namenode:
+        condition: service_healthy
+      hive-metastore-db:
+        condition: service_healthy
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    environment:
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://metastore_db:5432/metastore_db
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName=org.postgresql.Driver
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionUserName=hive
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionPassword=hive_password
+      - HIVE_SITE_CONF_datanucleus_autoCreateSchema=true
+      - HIVE_SITE_CONF_datanucleus_fixedDatastore=false
+      - HIVE_CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HIVE_SERVER2_THRIFT_BIND_HOST=0.0.0.0
+      - HIVE_SITE_CONF_hive_metastore_schema_verification=false
+    env_file:
+      - ./hadoop.env
+    networks:
+      - analytics-net
+
+  # --- SPARK СЕГМЕНТ ---
+  spark-master:
+    image: bde2020/spark-master:3.0.1-hadoop3.2
+    container_name: spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - INIT_DAEMON_STEP=setup_spark
+    networks:
+      - analytics-net
+
+  spark-worker:
+    image: bde2020/spark-worker:3.0.1-hadoop3.2
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+    networks:
+      - analytics-net
+
+  # --- DASHBOARD (с requirements.txt и plotly) ---
+  dashboard:
+    image: python:3.10-slim
+    container_name: drone-dashboard
+    restart: "no"
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: >
+      sh -c "
+        pip install --no-cache-dir -r requirements.txt &&
+        streamlit run dashboard.py --server.port=8501 --server.address=0.0.0.0
+      "
+    ports:
+      - "8501:8501"
+    networks:
+      - analytics-net
+
+networks:
+  analytics-net:
+    driver: bridge
+
+volumes:
+  metastore_db_data:
+  hadoop_namenode:
+  hadoop_datanode:
