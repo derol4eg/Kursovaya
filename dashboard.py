@@ -7,7 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 st.set_page_config(page_title="Аналитика дронов", layout="wide")
-st.title("📊 Аналитика дронов")
+st.title(" Аналитика дронов")
 
 def safe_load_csv(path, **kwargs):
     if not os.path.exists(path):
@@ -19,19 +19,18 @@ def safe_load_csv(path, **kwargs):
         return None
 
 # ===================================================================
-# 📥 СЫРЫЕ ДАННЫЕ (до 1 млн строк)
+#  СЫРЫЕ ДАННЫЕ (до 1 млн строк)
 # ===================================================================
 raw_file = "drone_events_million.csv"
 raw_df = safe_load_csv(raw_file, nrows=1_000_000)
 
 if raw_df is not None:
-    st.header("📡 Сырые события дронов (выборка 1M строк)")
+    st.header(" Сырые события дронов (выборка 1M строк)")
 
-    with st.expander("🔍 Просмотр данных"):
+    with st.expander(" Просмотр данных"):
         st.dataframe(raw_df.head(20), use_container_width=True)
 
-    # === КАРТОЧКИ KPI — как на вашем изображении ===
-    st.markdown("### 🛰️ Ключевые метрики дронов")
+    st.markdown("###  Ключевые метрики дронов")
 
     col_kpi1, col_kpi2 = st.columns(2)
 
@@ -62,7 +61,7 @@ if raw_df is not None:
 
     # === ГРАФИК 2: Средняя батарея по топ-10 дронам ===
     with col2:
-        st.subheader("🔋 Ср. уровень батареи (Топ-10 активных дронов)")
+        st.subheader(" Ср. уровень батареи (Топ-10 активных дронов)")
         if {'drone_id', 'battery'}.issubset(raw_df.columns):
             valid_bat = raw_df.dropna(subset=['battery']).copy()
             if not valid_bat.empty:
@@ -91,7 +90,7 @@ if raw_df is not None:
             st.warning("Отсутствуют колонки 'drone_id' или 'battery'.")
 
     # === ГРАФИК 3: Зависимость эффективности от уровня батареи ===
-    st.subheader("⚡ Эффективность vs Уровень заряда")
+    st.subheader(" Эффективность vs Уровень заряда")
     if {'battery', 'drone_efficiency'}.issubset(final_df.columns if 'final_df' in locals() else {}):
         eff_data = final_df[['battery', 'drone_efficiency']].dropna()
         if not eff_data.empty:
@@ -140,7 +139,7 @@ if raw_df is not None:
         st.warning("Колонка 'battery' не найдена. Невозможно показать зависимость.")
 
     # === ГРАФИК 4: Тепловая карта плотности событий (x, y) ===
-    st.subheader("🗺️ Плотность событий (X-Y координаты)")
+    st.subheader(" Плотность событий (X-Y координаты)")
     if {'x', 'y'}.issubset(raw_df.columns):
         sample_heat = raw_df[['x', 'y']].dropna().sample(min(30000, len(raw_df)))
         fig = px.density_heatmap(
@@ -156,7 +155,7 @@ if raw_df is not None:
         st.plotly_chart(fig, use_container_width=True)
 
     # === ГРАФИК 5: Приоритет зон + батарея ===
-    st.subheader("⚡ Уровень батареи по приоритету зоны")
+    st.subheader(" Уровень батареи по приоритету зоны")
     if {'x', 'y', 'battery'}.issubset(raw_df.columns):
         def classify_priority(row):
             dist = np.sqrt((row['x'] - 800)**2 + (row['y'] - 350)**2)
@@ -191,13 +190,13 @@ final_file = "drone_swarm_analytics.csv"
 final_df = safe_load_csv(final_file)
 
 if final_df is not None and not final_df.empty:
-    st.header("📈 Обработанные данные дронов")
+    st.header(" Обработанные данные дронов")
 
-    with st.expander("🔍 Просмотр обработанных данных"):
+    with st.expander(" Просмотр обработанных данных"):
         st.dataframe(final_df, use_container_width=True)
 
     # === КАРТОЧКИ KPI ПОСЛЕ ОБРАБОТКИ — без Топ-эффективного и Общего времени ===
-    st.markdown("### 🎯 Ключевые метрики после обработки")
+    st.markdown("###  Ключевые метрики после обработки")
 
     col_kpi5, col_kpi6 = st.columns(2)
 
@@ -212,7 +211,7 @@ if final_df is not None and not final_df.empty:
     # === ГРАФИК 6: Эффективность дронов ===
     col3, col4 = st.columns(2)
     with col3:
-        st.subheader("✅ Эффективность дронов")
+        st.subheader(" Эффективность дронов")
         if 'drone_efficiency' in final_df.columns:
             eff = final_df['drone_efficiency'].value_counts().reset_index()
             eff.columns = ['Эффективность', 'Количество']
@@ -228,7 +227,7 @@ if final_df is not None and not final_df.empty:
 
     # === ГРАФИК 7: Обработанные зоны vs батарея ===
     with col4:
-        st.subheader("🎯 Зоны vs Ср. уровень батареи")
+        st.subheader(" Зоны vs Ср. уровень батареи")
         if {'processed_zones', 'avg_battery_during_mission'}.issubset(final_df.columns):
             fig = px.scatter(
                 final_df,
@@ -246,9 +245,9 @@ if final_df is not None and not final_df.empty:
             st.plotly_chart(fig, use_container_width=True)
 
 # ===================================================================
-# 📈 МАСШТАБИРУЕМОСТЬ
+#  МАСШТАБИРУЕМОСТЬ
 # ===================================================================
-st.header("📈 Масштабируемость: Время обработки vs Объём данных")
+st.header(" Масштабируемость: Время обработки vs Объём данных")
 
 benchmark_file = "processing_benchmark.csv"
 if os.path.exists(benchmark_file):
@@ -281,7 +280,7 @@ else:
     st.plotly_chart(fig, use_container_width=True)
 
 # ===================================================================
-# ℹ️ Футер
+#  Футер
 # ===================================================================
 st.markdown("---")
 st.caption("💡 Дашборд автоматически обновляется при изменении CSV-файлов. Обновите страницу, чтобы увидеть новые результаты.")
