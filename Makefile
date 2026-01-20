@@ -1,5 +1,3 @@
-# --- Твои оригинальные команды (исправленные) ---
-
 build:
 	docker build -t bde2020/hadoop-base:$(current_branch) ./base
 	docker build -t bde2020/hadoop-namenode:$(current_branch) ./namenode
