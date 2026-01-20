@@ -10,15 +10,15 @@ USE drone_db;
 -- 2. Таблица событий от дронов
 DROP TABLE IF EXISTS events;
 CREATE EXTERNAL TABLE events (
-    `timestamp` DOUBLE,  -- Обернуто в обратные кавычки
+    `timestamp` DOUBLE, 
     event_type STRING,
     drone_id INT,
     zone_id INT,
     x DOUBLE,
     y DOUBLE,
     battery DOUBLE,
-    `state` STRING,      -- state тоже лучше обернуть для надежности
-    `mode` INT,          -- mode является зарезервированным словом в некоторых версиях
+    `state` STRING,      
+    `mode` INT,          
     mission_time DOUBLE
 )
 ROW FORMAT DELIMITED
