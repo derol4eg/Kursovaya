@@ -1,31 +1,3 @@
-DOCKER_NETWORK = docker-hadoop_default
-ENV_FILE = hadoop.env
-current_branch := $(shell git rev-parse --abbrev-ref HEAD)
-
-# --- Основные команды управления ---
-
-# Запустить всю инфраструктуру (Hadoop, Hive, Spark)
-up:
-	docker-compose up -d
-
-# Остановить все контейнеры
-down:
-	docker-compose down
-
-# Посмотреть статус контейнеров
-status:
-	docker-compose ps
-
-# --- Автоматизация данных ---
-
-# Главная команда: запускает PowerShell скрипт (загрузка в HDFS + создание таблиц в Hive)
-setup:
-	powershell -File ./upload_data.ps1
-
-# Очистить данные в HDFS (если нужно начать заново)
-clean-hdfs:
-	docker exec namenode hdfs dfs -rm -r /data/cars
-
 # --- Твои оригинальные команды (исправленные) ---
 
 build:
