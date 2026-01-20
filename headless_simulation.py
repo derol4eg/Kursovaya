@@ -95,7 +95,7 @@ def main():
             if sim_id % 100 == 0:
                 print(f"Generated {records} / {TARGET_RECORDS} records ({sim_id} simulations)")
 
-    print(f"✅ Done! {records} records saved to {OUTPUT_FILE}")
+    print(f" Done! {records} records saved to {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
